@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 from pysqlcipher3 import dbapi2 as sqlcipher
 
@@ -7,8 +7,10 @@ import os
 
 # Locations of things
 BASE = os.path.dirname(os.path.abspath(__file__))
-CONFIG = "config.json"
-DB = "sql/db.sqlite"
+CONFIG_ROOT = os.path.join(BASE, 'backup')
+#CONFIG_ROOT = os.path.join(os.getenv('HOME'), '.config', 'Signal')
+CONFIG = os.path.join(CONFIG_ROOT, "config.json")
+DB = os.path.join(CONFIG_ROOT, "sql/db.sqlite")
 
 # Read sqlcipher key from Signal config file
 try:
@@ -20,6 +22,9 @@ except FileNotFoundError:
     import sys
     sys.exit(1)
 
+#print(f"Key = {key}")
+#print(f"DB path = {DB}")
+
 db = sqlcipher.connect(DB)
 c = db.cursor()
 c2 = db.cursor()
@@ -27,10 +32,6 @@ c2 = db.cursor()
 # param binding doesn't work for pragmas, so use a direct string concat
 for cursor in [c, c2]:
     cursor.execute(f'PRAGMA KEY = "x\'{key}\'"')
-    cursor.execute(f'PRAGMA cipher_page_size = 1024')
-    cursor.execute(f'PRAGMA kdf_iter = 64000')
-    cursor.execute(f'PRAGMA cipher_hmac_algorithm = HMAC_SHA1')
-    cursor.execute(f'PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA1')
 
 # Hold numeric user id to conversation/user names
 conversations = {}
